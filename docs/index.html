@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organiseur</title>
+  <style>
+    :root {
+      --bg: #f6f6f8; --panel: #ffffff; --text: #1c1c1e; --muted: #6b6b70;
+      --border: #e2e2e6; --accent: #fa520f; --accent-soft: #ffe9df; --done: #9a9a9f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141418; --panel: #1e1e24; --text: #ececee;
+        --muted: #9a9aa0; --border: #33333a; --accent-soft: #3a2418;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem;
+      background: var(--panel); border-bottom: 1px solid var(--border); flex-wrap: wrap;
+    }
+    h1 { font-size: 1.1rem; margin: 0; }
+    nav { display: flex; gap: 0.25rem; }
+    .tab {
+      border: none; background: transparent; color: var(--muted);
+      padding: 0.5rem 0.9rem; border-radius: 8px; font-size: 0.95rem; cursor: pointer;
+    }
+    .tab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+    main { max-width: 900px; margin: 0 auto; padding: 1.25rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    h3 { margin: 1.5rem 0 0.5rem; font-size: 0.95rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .row { display: flex; gap: 0.5rem; }
+    .row.wrap { flex-wrap: wrap; align-items: center; }
+    input, select {
+      padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--panel); color: var(--text); font-size: 0.95rem;
+    }
+    #event-title, #todo-title, #rec-title { flex: 1; min-width: 140px; }
+    button[type="submit"], .markdone {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 0.55rem 1rem; font-size: 0.95rem; cursor: pointer;
+    }
+    .markdone { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 0.25rem 0.6rem; font-size: 0.85rem; }
+    button[type="submit"]:hover { filter: brightness(1.08); }
+    .markdone:hover { border-color: var(--accent); color: var(--accent); }
+    .ghost {
+      border: 1px solid var(--border); background: var(--panel); color: var(--text);
+      border-radius: 8px; width: 2.2rem; height: 2.2rem; font-size: 1.1rem; cursor: pointer;
+    }
+    label { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+    .cal-head { display: flex; align-items: center; gap: 0.75rem; }
+    .cal-head h2 { margin: 0; flex: 1; text-align: center; font-size: 1.15rem; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 0.75rem; }
+    .cal-grid .dow { text-align: center; font-size: 0.75rem; color: var(--muted); padding: 0.25rem 0; }
+    .day {
+      min-height: 84px; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.3rem; font-size: 0.75rem; cursor: pointer; overflow: hidden;
+    }
+    .day:hover { border-color: var(--accent); }
+    .day.other { opacity: 0.4; }
+    .day.today { border-color: var(--accent); border-width: 2px; }
+    .day .num { font-weight: 700; font-size: 0.8rem; margin-bottom: 0.2rem; }
+    .day .ev {
+      background: var(--accent-soft); color: var(--text); border-radius: 4px;
+      padding: 1px 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+    .list li {
+      display: flex; align-items: center; gap: 0.6rem; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.75rem;
+    }
+    .list .grow { flex: 1; }
+    .list .meta { color: var(--muted); font-size: 0.85rem; }
+    .list.done .label { text-decoration: line-through; color: var(--done); }
+    .delt {
+      border: none; background: transparent; color: var(--muted); cursor: pointer;
+      font-size: 1rem; padding: 0.15rem 0.4rem; border-radius: 6px;
+    }
+    .delt:hover { color: #c0392b; background: var(--accent-soft); }
+    .hint { color: var(--muted); font-size: 0.85rem; }
+    .empty { color: var(--muted); font-style: italic; }
+    .export-bar { margin-top: 1.5rem; display: flex; gap: 0.5rem; align-items: center; }
+    .export-bar .ghost { width: auto; padding: 0 0.75rem; height: auto; font-size: 0.85rem; padding: 0.45rem 0.8rem; }
+    @media (max-width: 640px) {
+      .day { min-height: 60px; }
+      .list .meta { display: none; }
+      .row { flex-wrap: wrap; }
+      #event-date, #event-time { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Organiseur</h1>
+    <nav>
+      <button class="tab active" data-tab="calendrier">Calendrier</button>
+      <button class="tab" data-tab="taches">Tâches</button>
+      <button class="tab" data-tab="recurrences">Récurrences</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-calendrier" class="panel active">
+      <div class="cal-head">
+        <button id="cal-prev" class="ghost" aria-label="Mois précédent">‹</button>
+        <h2 id="cal-title"></h2>
+        <button id="cal-next" class="ghost" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <h3>Nouvel événement</h3>
+      <form id="event-form" class="row">
+        <input id="event-date" type="date" required />
+        <input id="event-time" type="time" />
+        <input id="event-title" type="text" placeholder="Événement (ex. Rendez-vous)" required />
+        <button type="submit">Ajouter</button>
+      </form>
+
+      <h3>À venir</h3>
+      <ul id="upcoming" class="list"></ul>
+    </section>
+
+    <section id="tab-taches" class="panel">
+      <h3>Nouvelle tâche</h3>
+      <form id="todo-form" class="row">
+        <input id="todo-title" type="text" placeholder="Qu'y a-t-il à faire ?" required />
+        <button type="submit">Ajouter</button>
+      </form>
+      <ul id="todo-list" class="list"></ul>
+    </section>
+
+    <section id="tab-recurrences" class="panel">
+      <h3>Nouvelle récurrence</h3>
+      <form id="rec-form" class="row wrap">
+        <input id="rec-title" type="text" placeholder="Tâche (ex. Payer URSSAF)" required />
+        <select id="rec-freq">
+          <option value="monthly">Chaque mois</option>
+          <option value="weekly">Chaque semaine</option>
+          <option value="daily">Chaque jour</option>
+        </select>
+        <label id="rec-day-wrap">Jour du mois
+          <input id="rec-day" type="number" min="1" max="31" value="31" />
+        </label>
+        <label id="rec-weekday-wrap" hidden>
+          <select id="rec-weekday">
+            <option value="1">Lundi</option><option value="2">Mardi</option>
+            <option value="3">Mercredi</option><option value="4">Jeudi</option>
+            <option value="5">Vendredi</option><option value="6">Samedi</option>
+            <option value="7">Dimanche</option>
+          </select>
+        </label>
+        <button type="submit">Ajouter</button>
+      </form>
+      <ul id="rec-list" class="list"></ul>
+      <p class="hint">« Marquer fait » reporte l'échéance à l'occurrence suivante. Si le jour n'existe pas dans un mois (ex. le 31 en novembre), l'échéance passe au dernier jour de ce mois.</p>
+    </section>
+
+    <div class="export-bar">
+      <button id="export-btn" class="ghost">Exporter les données</button>
+      <label for="import-file" style="cursor:pointer" class="ghost">Importer</label>
+      <input id="import-file" type="file" accept="application/json" hidden />
+    </div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+    const DOW = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+    const WEEKDAY_NAMES = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+    const KEY = "organiseur-state";
+
+    let state = load();
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) return { events: [], todos: [], recurrences: [], ...JSON.parse(raw) };
+      } catch {}
+      return { events: [], todos: [], recurrences: [] };
+    }
+    function save() {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+    const fmtDate = (s) => parseISO(s).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+    function reRender() {
+      renderCalendar();
+      renderUpcoming();
+      renderTodos();
+      renderRecurrences();
+    }
+
+    /* Onglets */
+    document.querySelectorAll(".tab").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab, .panel").forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+        $("tab-" + btn.dataset.tab).classList.add("active");
+      })
+    );
+
+    /* Calendrier */
+    let calCursor = new Date();
+    $("cal-prev").addEventListener("click", () => { calCursor.setMonth(calCursor.getMonth() - 1); renderCalendar(); });
+    $("cal-next").addEventListener("click", () => { calCursor.setMonth(calCursor.getMonth() + 1); renderCalendar(); });
+
+    function renderCalendar() {
+      const y = calCursor.getFullYear(), m = calCursor.getMonth();
+      $("cal-title").textContent = `${MONTHS[m]} ${y}`;
+      const grid = $("cal-grid");
+      grid.innerHTML = "";
+      for (const d of DOW) {
+        const el = document.createElement("div");
+        el.className = "dow";
+        el.textContent = d;
+        grid.appendChild(el);
+      }
+      const startOffset = (new Date(y, m, 1).getDay() + 6) % 7;
+      const start = new Date(y, m, 1 - startOffset);
+      const todayISO = iso(new Date());
+      for (let i = 0; i < 42; i++) {
+        const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const cell = document.createElement("div");
+        cell.className = "day" + (day.getMonth() !== m ? " other" : "") + (iso(day) === todayISO ? " today" : "");
+        const num = document.createElement("div");
+        num.className = "num";
+        num.textContent = day.getDate();
+        cell.appendChild(num);
+        for (const ev of state.events.filter((e) => e.date === iso(day))) {
+          const tag = document.createElement("div");
+          tag.className = "ev";
+          tag.textContent = (ev.time ? ev.time + " " : "") + ev.title;
+          cell.appendChild(tag);
+        }
+        cell.addEventListener("click", () => {
+          $("event-date").value = iso(day);
+          $("event-title").focus();
+        });
+        grid.appendChild(cell);
+      }
+    }
+
+    /* Événements */
+    $("event-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.events.push({ id: uid(), date: $("event-date").value, time: $("event-time").value || null, title: $("event-title").value.trim() });
+      $("event-title").value = "";
+      $("event-time").value = "";
+      save(); reRender();
+    });
+
+    function renderUpcoming() {
+      const list = $("upcoming");
+      list.innerHTML = "";
+      const today = iso(new Date());
+      const upcoming = state.events
+        .filter((e) => e.date >= today)
+        .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+      if (!upcoming.length) {
+        list.innerHTML = '<li class="empty">Aucun événement à venir.</li>';
+        return;
+      }
+      for (const ev of upcoming.slice(0, 20)) {
+        const li = document.createElement("li");
+        const label = document.createElement("span");
+        label.className = "grow";
+        label.textContent = (ev.time ? ev.time + " — " : "") + ev.title;
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = fmtDate(ev.date);
+        li.append(label, meta, delButton(() => { state.events = state.events.filter((x) => x.id !== ev.id); save(); reRender(); }));
+        list.appendChild(li);
+      }
+    }
+
+    /* Tâches */
+    $("todo-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.todos.push({ id: uid(), title: $("todo-title").value.trim(), done: false });
+      $("todo-title").value = "";
+      save(); reRender();
+    });
+
+    function renderTodos() {
+      const list = $("todo-list");
+      list.innerHTML = "";
+      const todos = [...state.todos].sort((a, b) => Number(a.done) - Number(b.done));
+      if (!todos.length) {
+        list.innerHTML = '<li class="empty">Aucune tâche. Ajoutez-en une !</li>';
+        return;
+      }
+      for (const todo of todos) {
+        const li = document.createElement("li");
+        if (todo.done) li.classList.add("done");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = todo.done;
+        cb.addEventListener("change", () => { todo.done = cb.checked; save(); reRender(); });
+        const label = document.createElement("span");
+        label.className = "grow label";
+        label.textContent = todo.title;
+        li.append(cb, label, delButton(() => { state.todos = state.todos.filter((x) => x.id !== todo.id); save(); reRender(); }));
+        list.appendChild(li);
+      }
+    }
+
+    /* Récurrences */
+    $("rec-freq").addEventListener("change", () => {
+      $("rec-day-wrap").hidden = $("rec-freq").value !== "monthly";
+      $("rec-weekday-wrap").hidden = $("rec-freq").value !== "weekly";
+    });
+
+    $("rec-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const freq = $("rec-freq").value;
+      if (freq === "monthly") {
+        const day = parseInt($("rec-day").value, 10);
+        if (!day || day < 1 || day > 31) return alert("Jour du mois invalide (1-31).");
+        state.recurrences.push({ id: uid(), title: $("rec-title").value.trim(), freq, day, lastDone: null });
+      } else if (freq === "weekly") {
+        state.recurrences.push({ id: uid(), title: $("rec-title").value.trim(), freq, weekday: parseInt($("rec-weekday").value, 10), lastDone: null });
+      } else {
+        state.recurrences.push({ id: uid(), title: $("rec-title").value.trim(), freq, lastDone: null });
+      }
+      $("rec-title").value = "";
+      save(); reRender();
+    });
+
+    function nextOccurrence(rec, from = new Date()) {
+      const y = from.getFullYear(), m = from.getMonth();
+      const today = new Date(y, m, from.getDate());
+      if (rec.freq === "daily") return today;
+      if (rec.freq === "weekly") {
+        const diff = (rec.weekday - 1 - ((today.getDay() + 6) % 7) + 7) % 7;
+        const next = new Date(today);
+        next.setDate(today.getDate() + diff);
+        return next;
+      }
+      const lastOfCurrent = new Date(y, m + 1, 0).getDate();
+      const thisMonth = new Date(y, m, Math.min(rec.day, lastOfCurrent));
+      if (thisMonth >= today) return thisMonth;
+      const lastOfNext = new Date(y, m + 2, 0).getDate();
+      return new Date(y, m + 1, Math.min(rec.day, lastOfNext));
+    }
+
+    function renderRecurrences() {
+      const list = $("rec-list");
+      list.innerHTML = "";
+      const recs = [...state.recurrences].sort((a, b) => nextOccurrence(a).getTime() - nextOccurrence(b).getTime());
+      if (!recs.length) {
+        list.innerHTML = '<li class="empty">Aucune récurrence. Créez-en une (ex. « Payer URSSAF », chaque mois, le 31).</li>';
+        return;
+      }
+      for (const rec of recs) {
+        const li = document.createElement("li");
+        const label = document.createElement("span");
+        label.className = "grow";
+        label.textContent = rec.title;
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        const freqText = rec.freq === "daily" ? "chaque jour" : rec.freq === "weekly" ? `chaque ${WEEKDAY_NAMES[rec.weekday]}` : `le ${rec.day} de chaque mois`;
+        meta.textContent = `${freqText} — prochaine : ${fmtDate(iso(nextOccurrence(rec)))}`;
+        const done = document.createElement("button");
+        done.className = "markdone";
+        done.textContent = "Marquer fait";
+        done.addEventListener("click", () => { rec.lastDone = iso(new Date()); save(); reRender(); });
+        li.append(label, meta, done, delButton(() => { state.recurrences = state.recurrences.filter((x) => x.id !== rec.id); save(); reRender(); }));
+        list.appendChild(li);
+      }
+    }
+
+    /* Export / import */
+    $("export-btn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "organiseur-donnees.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    $("import-file").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          state = { events: [], todos: [], recurrences: [], ...data };
+          save(); reRender();
+        } catch {
+          alert("Fichier invalide.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function delButton(onClick) {
+      const btn = document.createElement("button");
+      btn.className = "delt";
+      btn.title = "Supprimer";
+      btn.textContent = "✕";
+      btn.addEventListener("click", onClick);
+      return btn;
+    }
+
+    reRender();
+  </script>
+</body>
+</html>

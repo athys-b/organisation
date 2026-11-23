@@ -25,6 +25,46 @@ function saveData(data) {
 
 const app = express();
 app.use(express.json());
+
+const PASSWORD = process.env.APP_PASSWORD;
+const AUTH_TOKEN = PASSWORD
+  ? crypto.createHash("sha256").update(`organiseur:${PASSWORD}`).digest("hex")
+  : null;
+
+function parseCookies(req) {
+  return Object.fromEntries(
+    (req.headers.cookie || "")
+      .split(";")
+      .filter(Boolean)
+      .map((c) => {
+        const idx = c.indexOf("=");
+        return [c.slice(0, idx).trim(), decodeURIComponent(c.slice(idx + 1).trim())];
+      })
+  );
+}
+
+if (PASSWORD) {
+  app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public", "login.html")));
+
+  app.post("/login", express.urlencoded({ extended: false }), (req, res) => {
+    if (req.body.password !== PASSWORD) {
+      return res.status(401).send("Mot de passe incorrect.");
+    }
+    res.cookie("auth", AUTH_TOKEN, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 90,
+    });
+    res.redirect("/");
+  });
+
+  app.use((req, res, next) => {
+    if (parseCookies(req).auth === AUTH_TOKEN) return next();
+    if (req.path === "/" && req.method === "GET") return res.redirect("/login");
+    res.status(401).json({ error: "Non authentifié." });
+  });
+}
+
 app.use(express.static(path.join(__dirname, "public")));
 
 const collections = ["events", "todos", "recurrences"];
@@ -65,6 +105,6 @@ collections.forEach(crud);
 app.use("/api", (req, res) => res.status(404).json({ error: "Endpoint inconnu." }));
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, "127.0.0.1", () => {
+app.listen(PORT, () => {
   console.log(`Organiseur démarré sur http://localhost:${PORT}`);
 });

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organiseur — Connexion</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f6f6f8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+    }
+    @media (prefers-color-scheme: dark) { body { background: #141418; } }
+    form {
+      background: var(--panel, #fff);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid #e2e2e6;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-width: 280px;
+    }
+    h1 { font-size: 1.1rem; margin: 0 0 0.25rem; text-align: center; color: #1c1c1e; }
+    input[type="password"] {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background: #fa520f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .err { color: #901a1a; font-size: 0.85rem; text-align: center; min-height: 1em; }
+  </style>
+</head>
+<body>
+  <form id="form">
+    <h1>Organiseur</h1>
+    <input id="password" type="password" placeholder="Mot de passe" autofocus required />
+    <button type="submit">Se connecter</button>
+    <p class="err" id="err"></p>
+  </form>
+  <script>
+    const form = document.getElementById("form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ password: document.getElementById("password").value }),
+      });
+      if (res.ok) {
+        location.href = "/";
+      } else {
+        document.getElementById("err").textContent = "Mot de passe incorrect.";
+      }
+    });
+  </script>
+</body>
+</html>
