@@ -1,0 +1,154 @@
+:root {
+  --bg: #f6f6f8;
+  --panel: #ffffff;
+  --text: #1c1c1e;
+  --muted: #6b6b70;
+  --border: #e2e2e6;
+  --accent: #fa520f;
+  --accent-soft: #ffe9df;
+  --done: #9a9a9f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141418;
+    --panel: #1e1e24;
+    --text: #ececee;
+    --muted: #9a9aa0;
+    --border: #33333a;
+    --accent-soft: #3a2418;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+h1 { font-size: 1.1rem; margin: 0; }
+nav { display: flex; gap: 0.25rem; }
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.tab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+main { max-width: 900px; margin: 0 auto; padding: 1.25rem; }
+.panel { display: none; }
+.panel.active { display: block; }
+h3 { margin: 1.5rem 0 0.5rem; font-size: 0.95rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.row { display: flex; gap: 0.5rem; }
+.row.wrap { flex-wrap: wrap; align-items: center; }
+input, select {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+#event-title, #todo-title, #rec-title { flex: 1; min-width: 160px; }
+button[type="submit"] {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+button[type="submit"]:hover { filter: brightness(1.08); }
+.ghost {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 8px;
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+label { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+
+.cal-head { display: flex; align-items: center; gap: 0.75rem; }
+.cal-head h2 { margin: 0; flex: 1; text-align: center; font-size: 1.15rem; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 0.75rem;
+}
+.cal-grid .dow { text-align: center; font-size: 0.75rem; color: var(--muted); padding: 0.25rem 0; }
+.day {
+  min-height: 84px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.3rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  overflow: hidden;
+}
+.day:hover { border-color: var(--accent); }
+.day.other { opacity: 0.4; }
+.day.today { border-color: var(--accent); border-width: 2px; }
+.day .num { font-weight: 700; font-size: 0.8rem; margin-bottom: 0.2rem; }
+.day .ev {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+.list .grow { flex: 1; }
+.list .meta { color: var(--muted); font-size: 0.85rem; }
+.list.done .label { text-decoration: line-through; color: var(--done); }
+.delt {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+}
+.delt:hover { color: #c0392b; background: var(--accent-soft); }
+.markdone {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.markdone:hover { border-color: var(--accent); color: var(--accent); }
+.hint { color: var(--muted); font-size: 0.85rem; }
+.empty { color: var(--muted); font-style: italic; }

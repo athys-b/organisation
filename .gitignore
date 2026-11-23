@@ -1,0 +1,4 @@
+# Données locales de l'organiseur (créées au premier lancement)
+data/
+node_modules/
+.env

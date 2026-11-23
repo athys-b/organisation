@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon organiseur</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Organiseur</h1>
+    <nav>
+      <button class="tab active" data-tab="calendrier">Calendrier</button>
+      <button class="tab" data-tab="taches">Tâches</button>
+      <button class="tab" data-tab="recurrences">Récurrences</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-calendrier" class="panel active">
+      <div class="cal-head">
+        <button id="cal-prev" class="ghost" aria-label="Mois précédent">‹</button>
+        <h2 id="cal-title"></h2>
+        <button id="cal-next" class="ghost" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <h3>Nouvel événement</h3>
+      <form id="event-form" class="row">
+        <input id="event-date" type="date" required />
+        <input id="event-time" type="time" />
+        <input id="event-title" type="text" placeholder="Événement (ex. Rendez-vous)" required />
+        <button type="submit">Ajouter</button>
+      </form>
+
+      <h3>À venir</h3>
+      <ul id="upcoming" class="list"></ul>
+    </section>
+
+    <section id="tab-taches" class="panel">
+      <h3>Nouvelle tâche</h3>
+      <form id="todo-form" class="row">
+        <input id="todo-title" type="text" placeholder="Qu'y a-t-il à faire ?" required />
+        <button type="submit">Ajouter</button>
+      </form>
+      <ul id="todo-list" class="list"></ul>
+    </section>
+
+    <section id="tab-recurrences" class="panel">
+      <h3>Nouvelle récurrence</h3>
+      <form id="rec-form" class="row wrap">
+        <input id="rec-title" type="text" placeholder="Tâche (ex. Payer URSSAF)" required />
+        <select id="rec-freq">
+          <option value="monthly">Chaque mois</option>
+          <option value="weekly">Chaque semaine</option>
+          <option value="daily">Chaque jour</option>
+        </select>
+        <label id="rec-day-wrap">Jour du mois
+          <input id="rec-day" type="number" min="1" max="31" value="31" />
+        </label>
+        <label id="rec-weekday-wrap" hidden>
+          <select id="rec-weekday">
+            <option value="1">Lundi</option>
+            <option value="2">Mardi</option>
+            <option value="3">Mercredi</option>
+            <option value="4">Jeudi</option>
+            <option value="5">Vendredi</option>
+            <option value="6">Samedi</option>
+            <option value="7">Dimanche</option>
+          </select>
+        </label>
+        <button type="submit">Ajouter</button>
+      </form>
+      <ul id="rec-list" class="list"></ul>
+      <p class="hint">« Marquer fait » reporte l'échéance à l'occurrence suivante. Si le jour n'existe pas dans un mois (ex. le 31 en novembre), l'échéance passe au dernier jour de ce mois.</p>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
