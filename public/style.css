@@ -130,6 +130,8 @@ label { font-size: 0.85rem; color: var(--muted); display: flex; align-items: cen
 .list .grow { flex: 1; }
 .list .meta { color: var(--muted); font-size: 0.85rem; }
 .list.done .label { text-decoration: line-through; color: var(--done); }
+.list li.just-moved { animation: drop-in 0.35s ease; }
+@keyframes drop-in { from { transform: translateY(-12px); opacity: 0.3; } to { transform: none; opacity: 1; } }
 .delt {
   border: none;
   background: transparent;

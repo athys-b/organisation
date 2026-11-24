@@ -150,11 +150,19 @@ function renderTodos() {
   }
   for (const todo of todos) {
     const li = document.createElement("li");
+    li.dataset.id = todo.id;
     if (todo.done) li.classList.add("done");
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = todo.done;
-    cb.addEventListener("change", () => api("PATCH", "/todos/" + todo.id, { done: cb.checked }).then(refresh));
+    cb.addEventListener("change", () =>
+      api("PATCH", "/todos/" + todo.id, { done: cb.checked })
+        .then(refresh)
+        .then(() => {
+          const moved = document.querySelector(`#todo-list li[data-id="${todo.id}"]`);
+          if (moved) moved.classList.add("just-moved");
+        })
+    );
     const label = document.createElement("span");
     label.className = "grow label";
     label.textContent = todo.title;

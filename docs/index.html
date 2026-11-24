@@ -75,6 +75,8 @@
     .list .grow { flex: 1; }
     .list .meta { color: var(--muted); font-size: 0.85rem; }
     .list.done .label { text-decoration: line-through; color: var(--done); }
+    .list li.just-moved { animation: drop-in 0.35s ease; }
+    @keyframes drop-in { from { transform: translateY(-12px); opacity: 0.3; } to { transform: none; opacity: 1; } }
     .delt {
       border: none; background: transparent; color: var(--muted); cursor: pointer;
       font-size: 1rem; padding: 0.15rem 0.4rem; border-radius: 6px;
@@ -297,11 +299,18 @@
       }
       for (const todo of todos) {
         const li = document.createElement("li");
+        li.dataset.id = todo.id;
         if (todo.done) li.classList.add("done");
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = todo.done;
-        cb.addEventListener("change", () => { todo.done = cb.checked; save(); reRender(); });
+        cb.addEventListener("change", () => {
+          todo.done = cb.checked;
+          save();
+          reRender();
+          const moved = document.querySelector(`#todo-list li[data-id="${todo.id}"]`);
+          if (moved) moved.classList.add("just-moved");
+        });
         const label = document.createElement("span");
         label.className = "grow label";
         label.textContent = todo.title;
