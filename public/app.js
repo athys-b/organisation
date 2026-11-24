@@ -189,21 +189,22 @@ $("rec-form").addEventListener("submit", async (e) => {
 });
 
 function nextOccurrence(rec, from = new Date()) {
-  const today = parseISO(iso(from));
-  if (rec.freq === "daily") return today;
-  if (rec.freq === "weekly") {
-    const target = rec.weekday;
-    const diff = (target - 1 - ((today.getDay() + 6) % 7) + 7) % 7;
-    const next = new Date(today);
-    next.setDate(today.getDate() + diff);
-    return next;
+  let d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  if (rec.lastDone) {
+    const last = parseISO(rec.lastDone);
+    last.setDate(last.getDate() + 1);
+    if (last > d) d = last;
   }
-  const lastOfCurrentMonth = new Date(from.getFullYear(), from.getMonth() + 1, 0).getDate();
-  const effectiveDay = Math.min(rec.day, lastOfCurrentMonth);
-  const thisMonth = new Date(from.getFullYear(), from.getMonth(), effectiveDay);
-  if (thisMonth >= today) return thisMonth;
-  const lastOfNextMonth = new Date(from.getFullYear(), from.getMonth() + 2, 0).getDate();
-  return new Date(from.getFullYear(), from.getMonth() + 1, Math.min(rec.day, lastOfNextMonth));
+  if (rec.freq === "daily") return d;
+  if (rec.freq === "weekly") {
+    const diff = (rec.weekday - 1 - ((d.getDay() + 6) % 7) + 7) % 7;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+  const cand = (yy, mm) => new Date(yy, mm, Math.min(rec.day, new Date(yy, mm + 1, 0).getDate()));
+  let next = cand(d.getFullYear(), d.getMonth());
+  if (next < d) next = cand(d.getFullYear(), d.getMonth() + 1);
+  return next;
 }
 
 function renderRecurrences() {
@@ -227,8 +228,8 @@ function renderRecurrences() {
       rec.freq === "daily" ? "chaque jour" :
       rec.freq === "weekly" ? `chaque ${WEEKDAY_NAMES[rec.weekday]}` :
       `le ${rec.day} de chaque mois`;
-    const next = nextOccurrence(rec);
-    meta.textContent = `${freqText} — prochaine : ${fmtDate(iso(next))}`;
+    const doneText = rec.lastDone ? `fait le ${fmtDate(rec.lastDone)} — ` : "";
+    meta.textContent = `${freqText} — ${doneText}prochaine : ${fmtDate(iso(nextOccurrence(rec)))}`;
     const done = document.createElement("button");
     done.className = "markdone";
     done.textContent = "Marquer fait";
